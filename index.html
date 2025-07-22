@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流服务商排名数据可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        accent: '#722ED1',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#F5222D',
+                        neutral: '#8C8C8C',
+                        'neutral-light': '#F5F5F5',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .shadow-soft {
+                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .card-hover {
+                @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-300;
+            }
+            .table-row-animate {
+                @apply transition-all duration-300 hover:bg-blue-50;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-truck text-primary text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">物流服务商排名分析</h1>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#overview" class="text-gray-600 hover:text-primary transition-all-300">概览</a>
+                <a href="#ranking" class="text-gray-600 hover:text-primary transition-all-300">排名数据</a>
+                <a href="#analysis" class="text-gray-600 hover:text-primary transition-all-300">数据分析</a>
+                <a href="#charts" class="text-gray-600 hover:text-primary transition-all-300">可视化图表</a>
+                <a href="#recommendations" class="text-gray-600 hover:text-primary transition-all-300">建议</a>
+            </div>
+            <button class="md:hidden text-gray-600" id="menuToggle">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t px-4 py-2">
+            <a href="#overview" class="block py-2 text-gray-600 hover:text-primary">概览</a>
+            <a href="#ranking" class="block py-2 text-gray-600 hover:text-primary">排名数据</a>
+            <a href="#analysis" class="block py-2 text-gray-600 hover:text-primary">数据分析</a>
+            <a href="#charts" class="block py-2 text-gray-600 hover:text-primary">可视化图表</a>
+            <a href="#recommendations" class="block py-2 text-gray-600 hover:text-primary">建议</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 概览部分 -->
+        <section id="overview" class="mb-12">
+            <div class="bg-gradient-to-r from-primary to-accent rounded-xl shadow-soft p-6 md:p-8 text-white">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">物流服务商综合排名</h2>
+                <p class="mb-6 max-w-3xl">本报告展示了55家物流服务商的综合表现排名，基于多项关键指标评估得出，包括出库及时率、妥投率、回传率等重要运营指标。</p>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 card-hover">
+                        <div class="text-sm opacity-90">参与评估总数</div>
+                        <div class="text-2xl font-bold">55家</div>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 card-hover">
+                        <div class="text-sm opacity-90">平均总得分</div>
+                        <div class="text-2xl font-bold">58.7分</div>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 card-hover">
+                        <div class="text-sm opacity-90">最高日均票数</div>
+                        <div class="text-2xl font-bold">5,335票</div>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 card-hover">
+                        <div class="text-sm opacity-90">最高妥投率</div>
+                        <div class="text-2xl font-bold">100%</div>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 card-hover">
+                        <div class="text-sm opacity-90">最低妥投率</div>
+                        <div class="text-2xl font-bold">34.25%</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 排名数据和雷达图部分 -->
+        <section id="ranking" class="mb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 排名表格 -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-soft p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-xl font-bold text-gray-800">物流服务商排名</h2>
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                            <div class="text-sm text-gray-500">数据周期：最新月度</div>
+                            <div class="relative">
+                                <input type="text" id="searchCompany" placeholder="搜索服务商..." 
+                                    class="border border-gray-300 rounded-md px-3 py-1.5 text-sm pl-8 focus:outline-none focus:ring-2 focus:ring-primary/50 w-full md:w-48">
+                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <select id="filterGroup" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <option value="all">全部排名</option>
+                                <option value="top10">Top 10</option>
+                                <option value="mid">11-40名</option>
+                                <option value="bottom">41-55名</option>
+                                <option value="new">新上榜企业</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto scrollbar-hide">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="sticky top-0 bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">物流服务商名称</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">4月排名</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">变化</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">日均票数</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">总得分</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="rankingTableBody">
+                                <!-- 表格数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 雷达图 -->
+                <div class="bg-white rounded-xl shadow-soft p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">服务商指标雷达图</h2>
+                        <div>
+                            <select id="companySelect" class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <!-- 选项将通过JavaScript动态生成 -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="h-[350px]">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    
+                    <div class="mt-4 text-sm text-gray-500">
+                        <p>雷达图展示了各物流服务商的关键运营指标表现，可通过下拉菜单切换查看。</p>
+                        <p class="mt-1">注：退款率为反向指标（越低越好）</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据分析部分 -->
+        <section id="analysis" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">关键观察分析</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 头部企业竞争 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-trophy text-primary"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">头部企业竞争激烈</h3>
+                    </div>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                            <span><strong>深圳市远邮国际物流</strong>（第1名）凭借均衡表现稳居榜首，高妥投率（94.84%）和低退款率（0.98%）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                            <span><strong>新源晟（深圳）国际物流</strong>（第2名，↑9名）成为黑马，妥投率91.65% + 回传率89.57%达行业顶尖</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
+                            <span><strong>上海淌瀛供应链</strong>（第3名，↓2名）出库及时率99.68%为全表最高，但退款率1.7%拖累总分</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 中游企业分化 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-balance-scale text-secondary"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">中游企业：规模与质量分化</h3>
+                    </div>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fa fa-arrow-down text-danger mt-1 mr-2"></i>
+                            <span><strong>深圳市禾平国际物流</strong>（第9名，↓4名）：日均5335票（全表最高），但妥投率仅77.27%</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-arrow-down text-danger mt-1 mr-2"></i>
+                            <span><strong>义乌市汇增供应链</strong>（第23名，↓17名）：日均3583票，但妥投率70.23%导致排名暴跌</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-arrow-up text-success mt-1 mr-2"></i>
+                            <span><strong>上海前雨国际货运</strong>（第4名，↑28名）：日均1827票，出库及时率99.93%表现突出</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 尾部企业问题 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-exclamation-circle text-danger"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">尾部企业：指标严重缺陷</h3>
+                    </div>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fa fa-times-circle text-danger mt-1 mr-2"></i>
+                            <span><strong>中外运厦门分公司</strong>（第49名，↓35名）：妥投率34.25%（全表最低），轨迹完整率仅79.15%</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-times-circle text-danger mt-1 mr-2"></i>
+                            <span><strong>莆田市中洲物流</strong>（第54名）：妥投率41.02% + 出库及时率45.71%，多项指标不达标</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-question-circle text-warning mt-1 mr-2"></i>
+                            <span><strong>广东拓界供应链</strong>（第25名）：妥投率100%，但日均仅3票，参考价值有限</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 关键指标分析 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-bar-chart text-accent"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">关键指标关联分析</h3>
+                    </div>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fa fa-link text-accent mt-1 mr-2"></i>
+                            <span><strong>出库及时率 vs 妥投率</strong>：多数企业出库及时率＞95%，但妥投率差异显著（34.25%~100%），末端配送是瓶颈</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-link text-accent mt-1 mr-2"></i>
+                            <span><strong>退款率与排名负相关</strong>：Top 10企业退款率均＜1.7%，尾部企业因数据缺失或高退款率排名垫底</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-link text-accent mt-1 mr-2"></i>
+                            <span><strong>特殊案例</strong>：深圳市顺友跨境物流出库及时率仅70.62%，但妥投率92.11%，依赖第三方末端网络</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 动态变化启示 -->
+            <div class="mt-6 bg-white rounded-xl shadow-soft p-6 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-line-chart text-warning"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold">动态变化启示</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-success mb-2">最大升幅企业</h4>
+                        <p class="text-gray-700"><strong>广东中鹏供应链</strong>（↑44名至第7名），核心驱动为妥投率89.13% + 超低退款率0.07%</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-danger mb-2">最大降幅企业</h4>
+                        <p class="text-gray-700"><strong>中外运厦门分公司</strong>（↓35名），主因妥投率暴跌至34.25%</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 可视化图表部分 -->
+        <section id="charts" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">数据可视化图表</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 日均票数对比 -->
+                <div class="bg-white rounded-xl shadow-soft p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">日均票数对比（Top 10与Bottom 10）</h3>
+                        <div>
+                            <select id="volumeChartFilter" class="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <option value="top10bottom10">Top 10与Bottom 10</option>
+                                <option value="top20">Top 20</option>
+                                <option value="all">全部</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="h-[300px]">
+                        <canvas id="dailyVolumeChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 总得分对比 -->
+                <div class="bg-white rounded-xl shadow-soft p-6">
+                    <h3 class="text-lg font-semibold mb-4">总得分分布</h3>
+                    <div class="h-[300px]">
+                        <canvas id="scoreDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 妥投率与出库及时率散点图 -->
+                <div class="bg-white rounded-xl shadow-soft p-6">
+                    <h3 class="text-lg font-semibold mb-4">妥投率 vs 出库及时率（气泡大小=日均票数）</h3>
+                    <div class="h-[300px]">
+                        <canvas id="deliveryVsOutboundChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 排名变化与得分关系 -->
+                <div class="bg-white rounded-xl shadow-soft p-6">
+                    <h3 class="text-lg font-semibold mb-4">排名变化与总得分关系</h3>
+                    <div class="h-[300px]">
+                        <canvas id="rankChangeVsScoreChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 关键指标平均值对比 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">不同排名区间关键指标平均值</h3>
+                        <div>
+                            <select id="avgMetricsFilter" class="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <option value="quartile">四等分区间</option>
+                                <option value="top10">Top 10 vs 其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="h-[300px]">
+                        <canvas id="avgMetricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 建议部分 -->
+        <section id="recommendations" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">建议</h2>
+            
+            <div class="bg-white rounded-xl shadow-soft p-6 md:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-primary">风险点</h3>
+                        <ul class="space-y-4 text-gray-700">
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-exclamation-triangle text-danger"></i>
+                                </div>
+                                <p><strong>高单量企业的服务稳定性</strong>：如禾平国际物流单量超5000票/日，但妥投率不足80%，存在规模不经济风险。</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-exclamation-triangle text-danger"></i>
+                                </div>
+                                <p><strong>数据透明度</strong>：9家企业缺失部分指标（如轨迹完整率），影响评估公正性。</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-exclamation-triangle text-danger"></i>
+                                </div>
+                                <p><strong>末端配送能力</strong>：多家企业出库及时率高但妥投率低，反映末端配送网络存在短板。</p>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-success">改进建议</h3>
+                        <ul class="space-y-4 text-gray-700">
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-lightbulb-o text-success"></i>
+                                </div>
+                                <p><strong>对低妥投率企业</strong>：优化末端合作伙伴或自建配送网络（参考合联物流98.49%妥投率）。</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-lightbulb-o text-success"></i>
+                                </div>
+                                <p><strong>对高退款率企业</strong>：加强售后团队培训或完善赔付机制（如义达跨境退款率2.17%仍排第15名）。</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-lightbulb-o text-success"></i>
+                                </div>
+                                <p><strong>对数据缺失企业</strong>：强制要求完整上报，否则降级处理。</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center mt-0.5 mr-4 flex-shrink-0">
+                                    <i class="fa fa-lightbulb-o text-success"></i>
+                                </div>
+                                <p><strong>对高单量低评分企业</strong>：适当控制规模扩张速度，优先提升服务质量，避免因单量过大导致服务下滑。</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa fa-truck text-primary text-xl"></i>
+                        <span class="font-bold text-lg">物流服务商排名分析</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-2">数据可视化报告 © 2023</p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    <a href="#" class="text-gray-400 hover:text-white transition-all-300">
+                        <i class="fa fa-file-text-o"></i> 完整报告
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-all-300">
+                        <i class="fa fa-refresh"></i> 更新数据
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-all-300">
+                        <i class="fa fa-envelope-o"></i> 联系我们
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 完整物流服务商数据
+        const logisticsData = [
+            { "排名": 1, "物流服务商名称": "深圳市远邮国际物流有限公司", "认证主体": "-", "4月排名": 2, "变化": "↑1", "日均票数": 993, "48h出库及时率": "98.48%", "20d妥投率": "94.84%", "48h回传率": "91.99%", "轨迹完整率": "99.99%", "退款率": "0.98%", "总得分": 99 },
+            { "排名": 2, "物流服务商名称": "新源晟（深圳）国际物流有限公司", "认证主体": "-", "4月排名": 11, "变化": "↑9", "日均票数": 119, "48h出库及时率": "98.52%", "20d妥投率": "91.65%", "48h回传率": "89.57%", "轨迹完整率": "99.93%", "退款率": "0.68%", "总得分": 92 },
+            { "排名": 3, "物流服务商名称": "上海淌瀛供应链科技有限公司", "认证主体": "-", "4月排名": 1, "变化": "↓2", "日均票数": 726, "48h出库及时率": "99.68%", "20d妥投率": "88.42%", "48h回传率": "94.04%", "轨迹完整率": "98.02%", "退款率": "1.70%", "总得分": 90.5 },
+            { "排名": 4, "物流服务商名称": "上海前雨国际货运代理有限公司", "认证主体": "前雨", "4月排名": 32, "变化": "↑28", "日均票数": 1827, "48h出库及时率": "99.93%", "20d妥投率": "70.57%", "48h回传率": "95.81%", "轨迹完整率": "96.00%", "退款率": "0.37%", "总得分": 88 },
+            { "排名": 5, "物流服务商名称": "莆田市嘉时派信息科技有限公司", "认证主体": "一龙", "4月排名": 31, "变化": "↑26", "日均票数": 2176, "48h出库及时率": "99.23%", "20d妥投率": "84.09%", "48h回传率": "81.33%", "轨迹完整率": "99.84%", "退款率": "0.46%", "总得分": 86.5 },
+            { "排名": 6, "物流服务商名称": "莆田市一龙物流有限公司", "认证主体": "一龙", "4月排名": 22, "变化": "↑16", "日均票数": 1172, "48h出库及时率": "99.82%", "20d妥投率": "87.70%", "48h回传率": "74.69%", "轨迹完整率": "98.08%", "退款率": "0.20%", "总得分": 85 },
+            { "排名": 7, "物流服务商名称": "广东中鹏供应链管理有限公司", "认证主体": "-", "4月排名": 51, "变化": "↑44", "日均票数": 2080, "48h出库及时率": "96.44%", "20d妥投率": "89.13%", "48h回传率": "67.39%", "轨迹完整率": "97.52%", "退款率": "0.07%", "总得分": 82 },
+            { "排名": 8, "物流服务商名称": "丰盛（福建）供应链管理有限公司", "认证主体": "禾信", "4月排名": 10, "变化": "↑2", "日均票数": 325, "48h出库及时率": "99.84%", "20d妥投率": "91.40%", "48h回传率": "73.07%", "轨迹完整率": "97.77%", "退款率": "0.71%", "总得分": 81.5 },
+            { "排名": 9, "物流服务商名称": "深圳市禾平国际物流有限公司", "认证主体": "美迎", "4月排名": 5, "变化": "↓4", "日均票数": 5335, "48h出库及时率": "98.72%", "20d妥投率": "77.27%", "48h回传率": "84.57%", "轨迹完整率": "99.90%", "退款率": "0.65%", "总得分": 80.5 },
+            { "排名": 10, "物流服务商名称": "深圳市顺友跨境物流股份有限公司", "认证主体": "-", "4月排名": 17, "变化": "↑7", "日均票数": 276, "48h出库及时率": "70.62%", "20d妥投率": "92.11%", "48h回传率": "97.76%", "轨迹完整率": "99.63%", "退款率": "1.27%", "总得分": 80.5 },
+            { "排名": 11, "物流服务商名称": "深圳合联物流供应链管理有限公司", "认证主体": "-", "4月排名": 41, "变化": "↑30", "日均票数": 145, "48h出库及时率": "86.22%", "20d妥投率": "98.49%", "48h回传率": "98.39%", "轨迹完整率": "97.71%", "退款率": "0.65%", "总得分": 80 },
+            { "排名": 12, "物流服务商名称": "修远天下物流（海南）有限公司", "认证主体": "-", "4月排名": 29, "变化": "↑17", "日均票数": 18, "48h出库及时率": "99.53%", "20d妥投率": "97.66%", "48h回传率": "74.41%", "轨迹完整率": "100.00%", "退款率": "1.29%", "总得分": 80 },
+            { "排名": 13, "物流服务商名称": "北京远大捷通货运代理有限公司广州分公司", "认证主体": "-", "4月排名": 25, "变化": "↑12", "日均票数": 815, "48h出库及时率": "99.99%", "20d妥投率": "79.88%", "48h回传率": "83.61%", "轨迹完整率": "95.01%", "退款率": "0.51%", "总得分": 79.5 },
+            { "排名": 14, "物流服务商名称": "上海佰邮通国际物流有限公司", "认证主体": "佰邮通", "4月排名": 4, "变化": "↓10", "日均票数": 91, "48h出库及时率": "99.84%", "20d妥投率": "79.85%", "48h回传率": "97.93%", "轨迹完整率": "93.96%", "退款率": "0.48%", "总得分": 79 },
+            { "排名": 15, "物流服务商名称": "义达跨境（上海）物流股份有限公司", "认证主体": "义达", "4月排名": 18, "变化": "↑3", "日均票数": 16, "48h出库及时率": "98.04%", "20d妥投率": "94.97%", "48h回传率": "95.20%", "轨迹完整率": "90.49%", "退款率": "2.17%", "总得分": 76 },
+            { "排名": 16, "物流服务商名称": "广州市鑫吉云国际物流有限公司", "认证主体": "鑫吉运", "4月排名": 37, "变化": "↑21", "日均票数": 1388, "48h出库及时率": "92.61%", "20d妥投率": "82.23%", "48h回传率": "76.79%", "轨迹完整率": "99.99%", "退款率": "0.28%", "总得分": 71.5 },
+            { "排名": 17, "物流服务商名称": "河南省秦巴供应链有限公司", "认证主体": "-", "4月排名": 8, "变化": "↓9", "日均票数": 442, "48h出库及时率": "99.49%", "20d妥投率": "88.47%", "48h回传率": "65.83%", "轨迹完整率": "78.72%", "退款率": "0.83%", "总得分": 71.5 },
+            { "排名": 18, "物流服务商名称": "佛山乾和供应链管理有限公司", "认证主体": "乾和盛", "4月排名": 27, "变化": "↑9", "日均票数": 62, "48h出库及时率": "95.02%", "20d妥投率": "84.46%", "48h回传率": "77.46%", "轨迹完整率": "99.59%", "退款率": "0.82%", "总得分": 71 },
+            { "排名": 19, "物流服务商名称": "广州市应达供应链服务有限公司", "认证主体": "-", "4月排名": 3, "变化": "↓16", "日均票数": 381, "48h出库及时率": "99.93%", "20d妥投率": "74.44%", "48h回传率": "94.47%", "轨迹完整率": "97.13%", "退款率": "2.32%", "总得分": 69.5 },
+            { "排名": 20, "物流服务商名称": "深圳市跨境易通供应链管理有限公司", "认证主体": "-", "4月排名": 44, "变化": "↑24", "日均票数": 871, "48h出库及时率": "97.15%", "20d妥投率": "71.97%", "48h回传率": "74.83%", "轨迹完整率": "99.38%", "退款率": "0.34%", "总得分": 69 },
+            { "排名": 21, "物流服务商名称": "深圳市跨通达物流有限公司", "认证主体": "跨通达", "4月排名": 19, "变化": "↓2", "日均票数": 827, "48h出库及时率": "82.72%", "20d妥投率": "92.35%", "48h回传率": "55.09%", "轨迹完整率": "99.99%", "退款率": "0.88%", "总得分": 69 },
+            { "排名": 22, "物流服务商名称": "深圳市华亚运通国际货运代理有限公司广州分公司", "认证主体": "华亚运通", "4月排名": 15, "变化": "↓7", "日均票数": 26, "48h出库及时率": "100.00%", "20d妥投率": "70.48%", "48h回传率": "78.94%", "轨迹完整率": "95.70%", "退款率": "0.79%", "总得分": 68 },
+            { "排名": 23, "物流服务商名称": "义乌市汇增供应链管理有限公司", "认证主体": "跨境鲸", "4月排名": 6, "变化": "↓17", "日均票数": 3583, "48h出库及时率": "96.57%", "20d妥投率": "70.23%", "48h回传率": "73.22%", "轨迹完整率": "91.80%", "退款率": "0.86%", "总得分": 66 },
+            { "排名": 24, "物流服务商名称": "深圳市琪林国际物流有限公司", "认证主体": "琪林", "4月排名": 23, "变化": "↓1", "日均票数": 2066, "48h出库及时率": "71.56%", "20d妥投率": "78.27%", "48h回传率": "82.60%", "轨迹完整率": "96.43%", "退款率": "1.10%", "总得分": 65.5 },
+            { "排名": 25, "物流服务商名称": "广东拓界供应链管理有限公司", "认证主体": "拓界", "4月排名": 55, "变化": "↑30", "日均票数": 3, "48h出库及时率": "100.00%", "20d妥投率": "100.00%", "48h回传率": "51.28%", "轨迹完整率": "100.00%", "退款率": "-", "总得分": 65 },
+            { "排名": 26, "物流服务商名称": "鑫淼（深圳）国际物流供应链管理有限公司", "认证主体": "-", "4月排名": 42, "变化": "↑16", "日均票数": 936, "48h出库及时率": "87.75%", "20d妥投率": "72.03%", "48h回传率": "81.98%", "轨迹完整率": "98.95%", "退款率": "0.38%", "总得分": 64.5 },
+            { "排名": 27, "物流服务商名称": "深圳市新时通达国际物流有限公司", "认证主体": "-", "4月排名": 30, "变化": "↑3", "日均票数": 504, "48h出库及时率": "95.69%", "20d妥投率": "75.48%", "48h回传率": "62.92%", "轨迹完整率": "91.25%", "退款率": "0.49%", "总得分": 64 },
+            { "排名": 28, "物流服务商名称": "恒广达（深圳）供应链科技有限公司", "认证主体": "-", "4月排名": 16, "变化": "↓12", "日均票数": 676, "48h出库及时率": "97.63%", "20d妥投率": "76.44%", "48h回传率": "75.38%", "轨迹完整率": "87.61%", "退款率": "0.60%", "总得分": 64 },
+            { "排名": 29, "物流服务商名称": "深圳市递四方速递有限公司", "认证主体": "-", "4月排名": 21, "变化": "↓8", "日均票数": 79, "48h出库及时率": "37.71%", "20d妥投率": "96.02%", "48h回传率": "98.29%", "轨迹完整率": "84.03%", "退款率": "1.77%", "总得分": 62.5 },
+            { "排名": 30, "物流服务商名称": "莆田市利葆通旭供应链有限公司", "认证主体": "利葆通旭", "4月排名": 28, "变化": "↓2", "日均票数": 292, "48h出库及时率": "97.79%", "20d妥投率": "67.57%", "48h回传率": "86.86%", "轨迹完整率": "93.12%", "退款率": "1.09%", "总得分": 61.5 },
+            { "排名": 31, "物流服务商名称": "厦门小楂达国际货运代理有限公司", "认证主体": "-", "4月排名": 9, "变化": "↓22", "日均票数": 1339, "48h出库及时率": "99.13%", "20d妥投率": "67.20%", "48h回传率": "69.36%", "轨迹完整率": "99.85%", "退款率": "1.22%", "总得分": 61 },
+            { "排名": 32, "物流服务商名称": "莆田市星洲港物流有限公司", "认证主体": "沣渊", "4月排名": 12, "变化": "↓20", "日均票数": 260, "48h出库及时率": "98.93%", "20d妥投率": "75.05%", "48h回传率": "67.43%", "轨迹完整率": "100.00%", "退款率": "1.74%", "总得分": 61 },
+            { "排名": 33, "物流服务商名称": "深圳前海德远现代物流有限公司", "认证主体": "-", "4月排名": 7, "变化": "↓26", "日均票数": 16, "48h出库及时率": "83.59%", "20d妥投率": "96.35%", "48h回传率": "97.32%", "轨迹完整率": "64.71%", "退款率": "0.56%", "总得分": 60 },
+            { "排名": 34, "物流服务商名称": "燕文物流股份有限公司", "认证主体": "燕文", "4月排名": 24, "变化": "↓10", "日均票数": 140, "48h出库及时率": "84.20%", "20d妥投率": "86.51%", "48h回传率": "99.43%", "轨迹完整率": "66.93%", "退款率": "0.76%", "总得分": 60 },
+            { "排名": 35, "物流服务商名称": "深圳市易德供应链有限公司广州分公司", "认证主体": "易德", "4月排名": 36, "变化": "↑1", "日均票数": 2, "48h出库及时率": "100.00%", "20d妥投率": "91.18%", "48h回传率": "90.17%", "轨迹完整率": "23.21%", "退款率": "7.18%", "总得分": 60 },
+            { "排名": 36, "物流服务商名称": "深圳市欧美派供应商管理有限公司", "认证主体": "-", "4月排名": "-", "变化": "New/↓36", "日均票数": 26, "48h出库及时率": "100.00%", "20d妥投率": "96.25%", "48h回传率": "96.93%", "轨迹完整率": "-", "退款率": "-", "总得分": 60 },
+            { "排名": 37, "物流服务商名称": "广州市航派国际物流有限公司", "认证主体": "-", "4月排名": 45, "变化": "↑8", "日均票数": 33, "48h出库及时率": "97.69%", "20d妥投率": "94.48%", "48h回传率": "46.85%", "轨迹完整率": "38.66%", "退款率": "0.29%", "总得分": 57 },
+            { "排名": 38, "物流服务商名称": "深圳永利八达通物流科技有限公司", "认证主体": "八达通", "4月排名": 33, "变化": "↓5", "日均票数": 2, "48h出库及时率": "96.30%", "20d妥投率": "100.00%", "48h回传率": "97.48%", "轨迹完整率": "0.00%", "退款率": "4.35%", "总得分": 57 },
+            { "排名": 39, "物流服务商名称": "莆田市博莱信息科技有限公司", "认证主体": "行歌", "4月排名": "-", "变化": "New/↓39", "日均票数": 2, "48h出库及时率": "100.00%", "20d妥投率": "83.33%", "48h回传率": "93.70%", "轨迹完整率": "-", "退款率": "-", "总得分": 54 },
+            { "排名": 40, "物流服务商名称": "甄兴盛越国际物流（莆田）有限公司", "认证主体": "-", "4月排名": "-", "变化": "New/↓40", "日均票数": 138, "48h出库及时率": "89.04%", "20d妥投率": "88.63%", "48h回传率": "82.59%", "轨迹完整率": "90.31%", "退款率": "-", "总得分": 53.5 },
+            { "排名": 41, "物流服务商名称": "宁波邮必达物流科技有限公司", "认证主体": "邮必达", "4月排名": 13, "变化": "↓28", "日均票数": 12, "48h出库及时率": "100.00%", "20d妥投率": "78.50%", "48h回传率": "72.17%", "轨迹完整率": "99.09%", "退款率": "5.56%", "总得分": 53 },
+            { "排名": 42, "物流服务商名称": "深圳市美胜国际供应链有限公司", "认证主体": "-", "4月排名": 35, "变化": "↓7", "日均票数": 1241, "48h出库及时率": "98.19%", "20d妥投率": "55.43%", "48h回传率": "68.49%", "轨迹完整率": "97.36%", "退款率": "1.42%", "总得分": 52 },
+            { "排名": 43, "物流服务商名称": "广州玖运通国际物流服务有限公司", "认证主体": "-", "4月排名": 40, "变化": "↓3", "日均票数": 240, "48h出库及时率": "99.64%", "20d妥投率": "56.22%", "48h回传率": "73.25%", "轨迹完整率": "98.39%", "退款率": "1.09%", "总得分": 50.5 },
+            { "排名": 44, "物流服务商名称": "莆田市星耀联畅国际物流有限公司", "认证主体": "星耀联畅", "4月排名": "-", "变化": "New/↓44", "日均票数": 26, "48h出库及时率": "99.71%", "20d妥投率": "91.74%", "48h回传率": "53.36%", "轨迹完整率": "60.00%", "退款率": "-", "总得分": 45 },
+            { "排名": 45, "物流服务商名称": "广州中航国际供应链有限公司", "认证主体": "中航", "4月排名": "-", "变化": "New/↓45", "日均票数": 3, "48h出库及时率": "96.55%", "20d妥投率": "96.55%", "48h回传率": "50.60%", "轨迹完整率": "12.50%", "退款率": "-", "总得分": 42 },
+            { "排名": 46, "物流服务商名称": "嘉里大通物流有限公司", "认证主体": "-", "4月排名": 38, "变化": "↓8", "日均票数": 249, "48h出库及时率": "77.00%", "20d妥投率": "61.98%", "48h回传率": "81.68%", "轨迹完整率": "96.48%", "退款率": "1.63%", "总得分": 41.5 },
+            { "排名": 47, "物流服务商名称": "中通云仓科技有限公司", "认证主体": "-", "4月排名": 34, "变化": "↓13", "日均票数": 325, "48h出库及时率": "81.15%", "20d妥投率": "67.54%", "48h回传率": "72.11%", "轨迹完整率": "94.09%", "退款率": "0.60%", "总得分": 38.5 },
+            { "排名": 48, "物流服务商名称": "深圳市青云物流供应链管理有限公司", "认证主体": "-", "4月排名": 50, "变化": "↑2", "日均票数": 2, "48h出库及时率": "69.23%", "20d妥投率": "92.31%", "48h回传率": "82.51%", "轨迹完整率": "27.27%", "退款率": "-", "总得分": 37.5 },
+            { "排名": 49, "物流服务商名称": "中外运空运有限公司厦门分公司", "认证主体": "玖铭通", "4月排名": 14, "变化": "↓35", "日均票数": 939, "48h出库及时率": "94.28%", "20d妥投率": "34.25%", "48h回传率": "79.43%", "轨迹完整率": "79.15%", "退款率": "0.40%", "总得分": 36.5 },
+            { "排名": 50, "物流服务商名称": "深圳市拓达通国际物流服务有限公司", "认证主体": "-", "4月排名": 39, "变化": "↓11", "日均票数": 45, "48h出库及时率": "99.53%", "20d妥投率": "49.23%", "48h回传率": "79.69%", "轨迹完整率": "99.76%", "退款率": "3.09%", "总得分": 35 },
+            { "排名": 51, "物流服务商名称": "深圳盈风达供应链管理有限公司", "认证主体": "-", "4月排名": 20, "变化": "↓31", "日均票数": 16, "48h出库及时率": "92.58%", "20d妥投率": "58.75%", "48h回传率": "77.34%", "轨迹完整率": "98.45%", "退款率": "3.43%", "总得分": 27.5 },
+            { "排名": 52, "物流服务商名称": "深圳市通云航国际供应链管理有限公司", "认证主体": "通云航", "4月排名": 47, "变化": "↓5", "日均票数": 196, "48h出库及时率": "81.69%", "20d妥投率": "48.61%", "48h回传率": "65.23%", "轨迹完整8h回传率": "65.23%", "轨迹完整率": "76.60%", "退款率": "0.25%", "总得分": 25 },
+            { "排名": 53, "物流服务商名称": "深圳市启航腾飞供应链有限公司", "认证主体": "-", "4月排名": 26, "变化": "↓27", "日均票数": 156, "48h出库及时率": "77.42%", "20d妥投率": "59.99%", "48h回传率": "82.10%", "轨迹完整率": "43.00%", "退款率": "0.88%", "总得分": 22.5 },
+            { "排名": 54, "物流服务商名称": "莆田市中洲物流供应链有限公司", "认证主体": "中洲", "4月排名": 43, "变化": "↓11", "日均票数": 2273, "48h出库及时率": "45.71%", "20d妥投率": "41.02%", "48h回传率": "61.17%", "轨迹完整率": "74.20%", "退款率": "1.04%", "总得分": 20 },
+            { "排名": 55, "物流服务商名称": "上海弘辰速供应链管理有限公司", "认证主体": "-", "4月排名": 46, "变化": "↓9", "日均票数": 1, "48h出库及时率": "100.00%", "20d妥投率": "100.00%", "48h回传率": "30.95%", "轨迹完整率": "0.00%", "退款率": "-", "总得分": 0 }
+        ];
+
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 移动端菜单切换
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            menuToggle.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // 填充表格数据
+            renderTable(logisticsData);
+            
+            // 填充公司选择下拉菜单
+            const companySelect = document.getElementById('companySelect');
+            logisticsData.forEach((company, index) => {
+                const option = document.createElement('option');
+                option.value = index; // 使用索引作为值
+                option.textContent = `${company.排名} - ${company.物流服务商名称}`;
+                companySelect.appendChild(option);
+            });
+            
+            // 初始化雷达图
+            initRadarChart(0); // 默认显示第一名
+            
+            // 当选择不同公司时更新雷达图
+            companySelect.addEventListener('change', function() {
+                const index = parseInt(this.value);
+                initRadarChart(index);
+            });
+            
+            // 初始化图表
+            initDailyVolumeChart();
+            initScoreDistributionChart();
+            initDeliveryVsOutboundChart();
+            initRankChangeVsScoreChart();
+            initAvgMetricsChart();
+            
+            // 搜索功能
+            const searchInput = document.getElementById('searchCompany');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredData = logisticsData.filter(company => 
+                    company.物流服务商名称.toLowerCase().includes(searchTerm) ||
+                    company.认证主体.toLowerCase().includes(searchTerm)
+                );
+                renderTable(filteredData);
+            });
+            
+            // 筛选功能
+            const filterSelect = document.getElementById('filterGroup');
+            filterSelect.addEventListener('change', function() {
+                let filteredData = [];
+                switch(this.value) {
+                    case 'top10':
+                        filteredData = logisticsData.filter(company => company.排名 <= 10);
+                        break;
+                    case 'mid':
+                        filteredData = logisticsData.filter(company => company.排名 >= 11 && company.排名 <= 40);
+                        break;
+                    case 'bottom':
+                        filteredData = logisticsData.filter(company => company.排名 >= 41);
+                        break;
+                    case 'new':
+                        filteredData = logisticsData.filter(company => company.变化 && company.变化.startsWith('New'));
+                        break;
+                    default:
+                        filteredData = logisticsData;
+                }
+                renderTable(filteredData);
+            });
+            
+            // 日均票数图表筛选
+            const volumeChartFilter = document.getElementById('volumeChartFilter');
+            volumeChartFilter.addEventListener('change', function() {
+                initDailyVolumeChart(this.value);
+            });
+            
+            // 平均指标图表筛选
+            const avgMetricsFilter = document.getElementById('avgMetricsFilter');
+            avgMetricsFilter.addEventListener('change', function() {
+                initAvgMetricsChart(this.value);
+            });
+        });
+        
+        // 渲染表格数据
+        function renderTable(data) {
+            const tableBody = document.getElementById('rankingTableBody');
+            tableBody.innerHTML = ''; // 清空现有内容
+            
+            if (data.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                        没有找到匹配的数据
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            data.forEach(company => {
+                const row = document.createElement('tr');
+                row.className = 'table-row-animate';
+                
+                // 排名单元格
+                const rankCell = document.createElement('td');
+                rankCell.className = 'px-4 py-3 whitespace-nowrap';
+                
+                // 为前三名添加特殊样式
+                let rankStyle = '';
+                if (company.排名 === 1) rankStyle = 'bg-yellow-500';
+                else if (company.排名 === 2) rankStyle = 'bg-gray-400';
+                else if (company.排名 === 3) rankStyle = 'bg-orange-600';
+                else rankStyle = 'bg-primary';
+                
+                rankCell.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full ${rankStyle} text-white flex items-center justify-center text-xs font-bold mr-2">
+                            ${company.排名}
+                        </div>
+                    </div>
+                `;
+                row.appendChild(rankCell);
+                
+                // 公司名称单元格
+                const nameCell = document.createElement('td');
+                nameCell.className = 'px-4 py-3 whitespace-nowrap';
+                nameCell.innerHTML = `
+                    <div>
+                        <div class="font-medium">${company.物流服务商名称}</div>
+                        <div class="text-xs text-gray-500">${company.认证主体 !== '-' ? company.认证主体 : ''}</div>
+                    </div>
+                `;
+                row.appendChild(nameCell);
+                
+                // 4月排名单元格
+                const aprilRankCell = document.createElement('td');
+                aprilRankCell.className = 'px-4 py-3 whitespace-nowrap hidden md:table-cell';
+                aprilRankCell.textContent = company.4月排名 !== '-' ? company.4月排名 : '新上榜';
+                row.appendChild(aprilRankCell);
+                
+                // 变化单元格
+                const changeCell = document.createElement('td');
+                changeCell.className = 'px-4 py-3 whitespace-nowrap';
+                let changeClass = '';
+                if (company.变化.startsWith('↑')) changeClass = 'text-success';
+                else if (company.变化.startsWith('↓')) changeClass = 'text-danger';
+                else if (company.变化.includes('New')) changeClass = 'text-warning';
+                
+                changeCell.innerHTML = `<span class="${changeClass} font-medium">${company.变化}</span>`;
+                row.appendChild(changeCell);
+                
+                // 日均票数单元格
+                const volumeCell = document.createElement('td');
+                volumeCell.className = 'px-4 py-3 whitespace-nowrap hidden sm:table-cell';
+                volumeCell.textContent = company.日均票数.toLocaleString();
+                row.appendChild(volumeCell);
+                
+                // 总得分单元格
+                const scoreCell = document.createElement('td');
+                scoreCell.className = 'px-4 py-3 whitespace-nowrap';
+                
+                // 根据得分设置不同颜色
+                let scoreColor = 'bg-danger';
+                if (company.总得分 >= 80) scoreColor = 'bg-success';
+                else if (company.总得分 >= 60) scoreColor = 'bg-primary';
+                
+                scoreCell.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-medium mr-2">${company.总得分}</span>
+                        <div class="w-20 bg-gray-200 rounded-full h-2">
+                            <div class="${scoreColor} h-2 rounded-full" style="width: ${Math.min(100, company.总得分)}%"></div>
+                        </div>
+                    </div>
+                `;
+                row.appendChild(scoreCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 初始化雷达图
+        function initRadarChart(index) {
+            const company = logisticsData[index];
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // 提取百分比数据并转换为数字，处理缺失值
+            const extractPercentage = (value) => {
+                if (value === '-' || value === undefined) return 0;
+                return parseFloat(value.replace('%', '')) || 0;
+            };
+            
+            // 如果图表已存在，销毁它
+            if (window.radarChartInstance) {
+                window.radarChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        '48h出库及时率',
+                        '20d妥投率',
+                        '48h回传率',
+                        '轨迹完整率',
+                        '退款率（反向）'
+                    ],
+                    datasets: [{
+                        label: company.物流服务商名称,
+                        data: [
+                            extractPercentage(company.48h出库及时率),
+                            extractPercentage(company.20d妥投率),
+                            extractPercentage(company.48h回传率),
+                            extractPercentage(company.轨迹完整率),
+                            100 - extractPercentage(company.退款率) // 退款率反向显示，越低越好
+                        ],
+                        backgroundColor: 'rgba(22, 93, 255, 0.2)',
+                        borderColor: 'rgba(22, 93, 255, 1)',
+                        pointBackgroundColor: 'rgba(22, 93, 255, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(22, 93, 255, 1)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    // 退款率需要特殊处理，显示原始值
+                                    if (context.dataIndex === 4) {
+                                        const originalValue = 100 - context.raw;
+                                        label += originalValue + '%';
+                                    } else {
+                                        label += context.raw + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 初始化日均票数对比图表
+        function initDailyVolumeChart(filter = 'top10bottom10') {
+            const ctx = document.getElementById('dailyVolumeChart').getContext('2d');
+            
+            // 根据筛选条件准备数据
+            let displayData = [];
+            switch(filter) {
+                case 'top20':
+                    displayData = logisticsData.slice(0, 20);
+                    break;
+                case 'all':
+                    displayData = logisticsData;
+                    break;
+                default: // top10bottom10
+                    displayData = [...logisticsData.slice(0, 10), ...logisticsData.slice(-10)];
+            }
+            
+            // 准备数据
+            const labels = displayData.map(company => `${company.排名} - ${company.物流服务商名称.substring(0, 6)}...`);
+            const data = displayData.map(company => company.日均票数);
+            const backgroundColors = displayData.map(company => 
+                company.排名 <= 10 ? 'rgba(54, 207, 201, 0.7)' : 'rgba(245, 34, 45, 0.7)'
+            );
+            const borderColors = displayData.map(company => 
+                company.排名 <= 10 ? 'rgba(54, 207, 201, 1)' : 'rgba(245, 34, 45, 1)'
+            );
+            
+            // 如果图表已存在，销毁它
+            if (window.dailyVolumeChartInstance) {
+                window.dailyVolumeChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.dailyVolumeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '日均票数',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '票数'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return `${displayData[index].排名} - ${displayData[index].物流服务商名称}`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 初始化总得分分布图表
+        function initScoreDistributionChart() {
+            const ctx = document.getElementById('scoreDistributionChart').getContext('2d');
+            
+            // 按得分区间分组
+            const scoreRanges = [
+                { range: '0-20', count: 0, color: 'rgba(245, 34, 45, 0.7)' },
+                { range: '21-40', count: 0, color: 'rgba(250, 173, 20, 0.7)' },
+                { range: '41-60', count: 0, color: 'rgba(255, 159, 64, 0.7)' },
+                { range: '61-80', count: 0, color: 'rgba(54, 162, 235, 0.7)' },
+                { range: '81-100', count: 0, color: 'rgba(75, 192, 192, 0.7)' }
+            ];
+            
+            logisticsData.forEach(company => {
+                if (company.总得分 <= 20) scoreRanges[0].count++;
+                else if (company.总得分 <= 40) scoreRanges[1].count++;
+                else if (company.总得分 <= 60) scoreRanges[2].count++;
+                else if (company.总得分 <= 80) scoreRanges[3].count++;
+                else scoreRanges[4].count++;
+            });
+            
+            // 如果图表已存在，销毁它
+            if (window.scoreDistributionChartInstance) {
+                window.scoreDistributionChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.scoreDistributionChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: scoreRanges.map(range => range.range),
+                    datasets: [{
+                        data: scoreRanges.map(range => range.count),
+                        backgroundColor: scoreRanges.map(range => range.color),
+                        borderColor: scoreRanges.map(range => range.color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value}家 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 初始化妥投率与出库及时率散点图
+        function initDeliveryVsOutboundChart() {
+            const ctx = document.getElementById('deliveryVsOutboundChart').getContext('2d');
+            
+            // 提取数据
+            const extractPercentage = (value) => {
+                if (value === '-' || value === undefined) return 0;
+                return parseFloat(value.replace('%', '')) || 0;
+            };
+            
+            const data = logisticsData.map(company => ({
+                x: extractPercentage(company.48h出库及时率),
+                y: extractPercentage(company.20d妥投率),
+                r: Math.min(20, Math.max(5, company.日均票数 / 300)), // 气泡大小，限制范围
+                name: company.物流服务商名称,
+                rank: company.排名
+            }));
+            
+            // 根据排名设置颜色
+            const colors = data.map(item => {
+                if (item.rank <= 10) return 'rgba(82, 196, 26, 0.7)'; // 绿色 - 优秀
+                if (item.rank <= 30) return 'rgba(22, 93, 255, 0.7)'; // 蓝色 - 良好
+                return 'rgba(245, 34, 45, 0.7)'; // 红色 - 较差
+            });
+            
+            // 如果图表已存在，销毁它
+            if (window.deliveryVsOutboundChartInstance) {
+                window.deliveryVsOutboundChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.deliveryVsOutboundChartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '物流服务商',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '48h出库及时率 (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '20d妥投率 (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const item = context.raw;
+                                    return [
+                                        `名称: ${item.name}`,
+                                        `排名: ${item.rank}`,
+                                        `出库及时率: ${item.x}%`,
+                                        `妥投率: ${item.y}%`,
+                                        `气泡大小代表日均票数`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 初始化排名变化与得分关系图表
+        function initRankChangeVsScoreChart() {
+            const ctx = document.getElementById('rankChangeVsScoreChart').getContext('2d');
+            
+            // 提取排名变化数值
+            const extractChangeValue = (change) => {
+                if (change.startsWith('↑')) return parseInt(change.replace('↑', ''));
+                if (change.startsWith('↓')) return -parseInt(change.replace('↓', ''));
+                return 0; // 新上榜或无变化
+            };
+            
+            // 准备数据
+            const data = logisticsData.map(company => ({
+                x: extractChangeValue(company.变化),
+                y: company.总得分,
+                name: company.物流服务商名称,
+                rank: company.排名
+            })).filter(item => !isNaN(item.x)); // 过滤掉无法解析变化值的数据
+            
+            // 如果图表已存在，销毁它
+            if (window.rankChangeVsScoreChartInstance) {
+                window.rankChangeVsScoreChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.rankChangeVsScoreChartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '排名变化与得分关系',
+                        data: data,
+                        backgroundColor: 'rgba(114, 46, 209, 0.7)',
+                        borderColor: 'rgba(114, 46, 209, 1)',
+                        borderWidth: 1,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '排名变化 (正数为上升，负数为下降)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '总得分'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const item = context.raw;
+                                    return [
+                                        `名称: ${item.name}`,
+                                        `当前排名: ${item.rank}`,
+                                        `排名变化: ${item.x > 0 ? '↑' : ''}${item.x}`,
+                                        `总得分: ${item.y}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+        
+        // 初始化平均指标图表
+        function initAvgMetricsChart(filter = 'quartile') {
+            const ctx = document.getElementById('avgMetricsChart').getContext('2d');
+            
+            // 提取百分比数据
+            const extractPercentage = (value) => {
+                if (value === '-' || value === undefined) return 0;
+                return parseFloat(value.replace('%', '')) || 0;
+            };
+            
+            // 按排名区间分组计算平均值
+            let groups = [];
+            
+            if (filter === 'top10') {
+                // Top 10 vs 其他
+                const top10 = logisticsData.slice(0, 10);
+                const others = logisticsData.slice(10);
+                
+                groups = [
+                    {
+                        name: 'Top 10',
+                        出库及时率: calculateAverage(top10, '48h出库及时率'),
+                        妥投率: calculateAverage(top10, '20d妥投率'),
+                        回传率: calculateAverage(top10, '48h回传率'),
+                        轨迹完整率: calculateAverage(top10, '轨迹完整率'),
+                        退款率: calculateAverage(top10, '退款率')
+                    },
+                    {
+                        name: '其他',
+                        出库及时率: calculateAverage(others, '48h出库及时率'),
+                        妥投率: calculateAverage(others, '20d妥投率'),
+                        回传率: calculateAverage(others, '48h回传率'),
+                        轨迹完整率: calculateAverage(others, '轨迹完整率'),
+                        退款率: calculateAverage(others, '退款率')
+                    }
+                ];
+            } else {
+                // 四等分区间
+                const quarter = Math.ceil(logisticsData.length / 4);
+                const group1 = logisticsData.slice(0, quarter);
+                const group2 = logisticsData.slice(quarter, quarter * 2);
+                const group3 = logisticsData.slice(quarter * 2, quarter * 3);
+                const group4 = logisticsData.slice(quarter * 3);
+                
+                groups = [
+                    {
+                        name: '1-' + quarter + '名',
+                        出库及时率: calculateAverage(group1, '48h出库及时率'),
+                        妥投率: calculateAverage(group1, '20d妥投率'),
+                        回传率: calculateAverage(group1, '48h回传率'),
+                        轨迹完整率: calculateAverage(group1, '轨迹完整率'),
+                        退款率: calculateAverage(group1, '退款率')
+                    },
+                    {
+                        name: (quarter + 1) + '-' + (quarter * 2) + '名',
+                        出库及时率: calculateAverage(group2, '48h出库及时率'),
+                        妥投率: calculateAverage(group2, '20d妥投率'),
+                        回传率: calculateAverage(group2, '48h回传率'),
+                        轨迹完整率: calculateAverage(group2, '轨迹完整率'),
+                        退款率: calculateAverage(group2, '退款率')
+                    },
+                    {
+                        name: (quarter * 2 + 1) + '-' + (quarter * 3) + '名',
+                        出库及时率: calculateAverage(group3, '48h出库及时率'),
+                        妥投率: calculateAverage(group3, '20d妥投率'),
+                        回传率: calculateAverage(group3, '48h回传率'),
+                        轨迹完整率: calculateAverage(group3, '轨迹完整率'),
+                        退款率: calculateAverage(group3, '退款率')
+                    },
+                    {
+                        name: (quarter * 3 + 1) + '-' + logisticsData.length + '名',
+                        出库及时率: calculateAverage(group4, '48h出库及时率'),
+                        妥投率: calculateAverage(group4, '20d妥投率'),
+                        回传率: calculateAverage(group4, '48h回传率'),
+                        轨迹完整率: calculateAverage(group4, '轨迹完整率'),
+                        退款率: calculateAverage(group4, '退款率')
+                    }
+                ];
+            }
+            
+            // 计算平均值的辅助函数
+            function calculateAverage(group, field) {
+                if (group.length === 0) return 0;
+                const sum = group.reduce((total, company) => {
+                    return total + extractPercentage(company[field]);
+                }, 0);
+                return Math.round((sum / group.length) * 10) / 10; // 保留一位小数
+            }
+            
+            // 准备图表数据
+            const labels = ['出库及时率', '妥投率', '回传率', '轨迹完整率', '退款率'];
+            const datasets = groups.map((group, index) => {
+                // 为不同组别分配不同颜色
+                const colors = [
+                    { bg: 'rgba(82, 196, 26, 0.7)', border: 'rgba(82, 196, 26, 1)' },
+                    { bg: 'rgba(22, 93, 255, 0.7)', border: 'rgba(22, 93, 255, 1)' },
+                    { bg: 'rgba(250, 173, 20, 0.7)', border: 'rgba(250, 173, 20, 1)' },
+                    { bg: 'rgba(245, 34, 45, 0.7)', border: 'rgba(245, 34, 45, 1)' }
+                ];
+                
+                return {
+                    label: group.name,
+                    data: [
+                        group.出库及时率,
+                        group.妥投率,
+                        group.回传率,
+                        group.轨迹完整率,
+                        group.退款率
+                    ],
+                    backgroundColor: colors[index].bg,
+                    borderColor: colors[index].border,
+                    borderWidth: 1
+                };
+            });
+            
+            // 如果图表已存在，销毁它
+            if (window.avgMetricsChartInstance) {
+                window.avgMetricsChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.avgMetricsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    scales: {
+                        x: {
+                            stacked: false,
+                        },
+                        y: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: '平均值 (%)'
+                            },
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw + '%';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
